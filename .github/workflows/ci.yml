@@ -1,0 +1,40 @@
+name: ci
+
+on: [push]
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.x
+      - run: dotnet restore src/Fern.TrustedPublishing.Test/Fern.TrustedPublishing.Test.csproj
+      - run: dotnet build src/Fern.TrustedPublishing.Test/Fern.TrustedPublishing.Test.csproj --no-restore -c Release
+
+  publish:
+    needs: [ci]
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read    # Required for checkout
+      id-token: write   # Required for NuGet Trusted Publishing (OIDC)
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.x
+      - run: dotnet restore src/Fern.TrustedPublishing.Test/Fern.TrustedPublishing.Test.csproj
+      - run: dotnet build src/Fern.TrustedPublishing.Test/Fern.TrustedPublishing.Test.csproj --no-restore -c Release
+      - run: dotnet pack src/Fern.TrustedPublishing.Test/Fern.TrustedPublishing.Test.csproj --no-build --no-restore -c Release
+      - name: NuGet login (OIDC -> temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - name: Publish to NuGet.org
+        run: dotnet nuget push src/Fern.TrustedPublishing.Test/bin/Release/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source "nuget.org" --skip-duplicate
