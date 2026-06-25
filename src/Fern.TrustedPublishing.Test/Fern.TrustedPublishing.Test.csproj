@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Fern.TrustedPublishing.Test</PackageId>
-    <Version>0.0.1-test.0</Version>
+    <Version>0.0.1-test.20260625175510</Version>
     <Description>Throwaway package for testing NuGet Trusted Publishing.</Description>
   </PropertyGroup>
 </Project>
